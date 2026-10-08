@@ -1,16 +1,3 @@
-# ═══════════════════════════════════════════════════════════════
-#                     🎵 SHIZUMUSIC
-#
-#                   © 2026 BAD MUNDA
-#
-#                Developed with ❤️ by Bad Munda
-#
-#             Do not remove or alter the original credits.
-#
-#           Copyright © 2026 Bad Munda. All rights reserved.
-#
-#              
-# ═══════════════════════════════════════════════════════════════
 
 import asyncio
 import logging
@@ -156,7 +143,7 @@ async def resolve_stream(url: str) -> str:
         logger.info("[shruti] Cache hit")
         return _file_cache[url]
 
-    video_id  = _extract_video_id(url)
+    video_id = _extract_video_id(url)
     file_path = os.path.join(DOWNLOAD_DIR, f"{video_id}.mp3")
 
     # Disk cache
@@ -166,13 +153,27 @@ async def resolve_stream(url: str) -> str:
 
     logger.info(f"[shruti] Downloading: {video_id}")
     downloaded = await download_song(url)
+
     if downloaded:
         _file_cache[url] = downloaded
-        logger.info(f"[shruti] Done — {os.path.getsize(downloaded) // 1024} KB")
+        logger.info(
+            f"[shruti] Done — {os.path.getsize(downloaded) // 1024} KB"
+        )
         return downloaded
 
     raise Exception("Shruti API download failed. Please try again.")
 
+
+# ═════════════════════════════════════════════════════════════════════════════
+# BACKWARD COMPATIBILITY
+# ═════════════════════════════════════════════════════════════════════════════
+
+async def resolve_video_stream(url: str) -> str:
+    """
+    Backward-compatible alias for modules that still import
+    resolve_video_stream().
+    """
+    return await resolve_stream(url)
 
 # ═════════════════════════════════════════════════════════════════════════════
 # PUBLIC — YOUTUBE SEARCH / METADATA
