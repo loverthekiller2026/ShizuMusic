@@ -67,63 +67,46 @@ async def download_song(link: str) -> str:
     if os.path.exists(file_path) and os.path.getsize(file_path) > 0:
         return file_path
 
+    api_url = f"{YT_API_URL.rstrip('/')}/download"
+
     try:
         async with aiohttp.ClientSession() as session:
             async with session.get(
-                f"{YT_API_URL}/download",
-                params={"url": video_id, "type": "audio", "api_key": YT_API_KEY},
+                api_url,
+                params={
+                    "url": video_id,
+                    "type": "audio",
+                    "api_key": YT_API_KEY,
+                },
                 timeout=aiohttp.ClientTimeout(total=YT_STREAM_TIMEOUT),
             ) as resp:
+
                 if resp.status != 200:
-                    logger.warning(f"[shruti] Audio download failed: HTTP {resp.status}")
+                    body = await resp.text()
+
+                    logger.warning(
+                        f"[shruti] Audio download failed: "
+                        f"HTTP {resp.status} | "
+                        f"Endpoint={api_url} | "
+                        f"Response={body[:500]}"
+                    )
                     return None
+
                 async with aiofiles.open(file_path, "wb") as f:
                     async for chunk in resp.content.iter_chunked(131072):
                         await f.write(chunk)
 
         if os.path.exists(file_path) and os.path.getsize(file_path) > 0:
+            logger.info(
+                f"[shruti] Audio downloaded successfully: "
+                f"{video_id} ({os.path.getsize(file_path)} bytes)"
+            )
             return file_path
+
         return None
 
     except Exception as e:
         logger.error(f"[shruti] download_song error: {e}")
-        _cleanup(file_path)
-        return None
-
-
-async def download_video(link: str) -> str:
-    """Download video via Shruti API. Returns local file path or None on failure."""
-    video_id = _extract_video_id(link)
-    if not video_id or len(video_id) < 3:
-        return None
-
-    os.makedirs(DOWNLOAD_DIR, exist_ok=True)
-    file_path = os.path.join(DOWNLOAD_DIR, f"{video_id}.mp4")
-
-    # Disk cache
-    if os.path.exists(file_path) and os.path.getsize(file_path) > 0:
-        return file_path
-
-    try:
-        async with aiohttp.ClientSession() as session:
-            async with session.get(
-                f"{YT_API_URL}/download",
-                params={"url": video_id, "type": "video", "api_key": YT_API_KEY},
-                timeout=aiohttp.ClientTimeout(total=YT_STREAM_TIMEOUT),
-            ) as resp:
-                if resp.status != 200:
-                    logger.warning(f"[shruti] Video download failed: HTTP {resp.status}")
-                    return None
-                async with aiofiles.open(file_path, "wb") as f:
-                    async for chunk in resp.content.iter_chunked(131072):
-                        await f.write(chunk)
-
-        if os.path.exists(file_path) and os.path.getsize(file_path) > 0:
-            return file_path
-        return None
-
-    except Exception as e:
-        logger.error(f"[shruti] download_video error: {e}")
         _cleanup(file_path)
         return None
 
