@@ -14,6 +14,12 @@ services:
       - key: API_HASH
         sync: false
 
+      - key: YT_API_URL
+        sync: false
+
+      - key: YT_API_KEY
+        sync: false
+
       - key: BOT_TOKEN
         sync: false
 
