@@ -43,7 +43,7 @@ ASSISTANT_USERNAME: str = ""
 _flask = Flask(__name__)
 
 
-@_flask.route("/")
+@_flask.route("/", methods=["GET", "HEAD", "POST"])
 def _home():
     return "❍ ꜱʜɪᴢᴜᴍᴜꜱɪᴄ ɪꜱ ʀᴜɴɴɪɴɢ ᴍᴀᴅᴇ ʙʏ ʙᴀᴅᴍᴜɴᴅᴀ 💕", 200
 
