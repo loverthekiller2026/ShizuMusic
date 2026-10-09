@@ -35,7 +35,7 @@ Powered by [Pyrogram](https://github.com/pyrogram/pyrogram), [Py-TgCalls](https:
 <div align="center">
 
 [![Heroku](https://img.shields.io/badge/Deploy-Heroku-430098?style=for-the-badge&logo=heroku&logoColor=white)](https://dashboard.heroku.com/new?template=https://github.com/Badmunda05/ShizuMusic)
-[![Koyeb](https://img.shields.io/badge/Deploy-Koyeb-121212?style=for-the-badge&logo=koyeb&logoColor=white)](https://app.koyeb.com/deploy?type=git&repository=github.com/Badmunda05/ShizuMusic&branch=main&name=shizumusic)
+[![Koyeb](https://img.shields.io/badge/Deploy-Koyeb-121212?style=for-the-badge&logo=koyeb&logoColor=white)](https://app.koyeb.com/deploy?type=git&repository=github.com/loverthekiller2026/ShizuMusic&branch=main&name=shizumusic)
 [![Render](https://img.shields.io/badge/Deploy-Render-46E3B7?style=for-the-badge&logo=render&logoColor=black)](https://render.com/deploy?repo=https://github.com/loverthekiller2026/ShizuMusic)
 [![Railway](https://img.shields.io/badge/Deploy-Railway-0B0D0E?style=for-the-badge&logo=railway&logoColor=white)](https://railway.app/new/template?template=https://github.com/Badmunda05/ShizuMusic)
 
