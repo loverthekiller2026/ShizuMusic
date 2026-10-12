@@ -1,16 +1,3 @@
-# ═══════════════════════════════════════════════════════════════
-#                     🎵 SHIZUMUSIC
-#
-#                   © 2026 BAD MUNDA
-#
-#                Developed with ❤️ by Bad Munda
-#
-#             Do not remove or alter the original credits.
-#
-#           Copyright © 2026 Bad Munda. All rights reserved.
-#
-#              
-# ═══════════════════════════════════════════════════════════════
 
 import asyncio
 import importlib
@@ -129,29 +116,47 @@ if __name__ == "__main__":
     threading.Thread(target=_keep_alive, daemon=True).start()
     LOGGER.info("Keep-alive thread started")
 
-    # 4. Bot start
-    for attempt in range(10):
+   
+    # 4. Bot start — handle Telegram FloodWait safely
+    from pyrogram.errors import FloodWait
+
+    started = False
+
+    for attempt in range(3):
         try:
             bot.start()
             LOGGER.info("Bot client started")
+            started = True
             break
-        except Exception as e:
-            if "FLOOD_WAIT" in str(e):
-                m    = re.search(r"(\d+)", str(e))
-                wait = min(int(m.group(1)) + 5 if m else 300, 1800)
-                LOGGER.warning(f"FLOOD_WAIT — sleeping {wait}s (attempt {attempt + 1}/10)")
+
+        except FloodWait as e:
+            wait = int(e.value) + 5
+
+            LOGGER.warning(
+                f"Telegram FloodWait: waiting {wait}s "
+                f"(attempt {attempt + 1}/3)"
+            )
+
+            if attempt < 2:
                 time.sleep(wait)
             else:
-                LOGGER.error(f"Bot start failed: {e}")
-                sys.exit(1)
-    else:
-        LOGGER.error("Bot failed to start after 10 attempts")
+                LOGGER.error(
+                    "Bot failed to start after 3 attempts"
+                )
+
+        except Exception:
+            LOGGER.exception("Bot start failed")
+            sys.exit(1)
+
+    if not started:
         sys.exit(1)
 
     me = bot.get_me()
     LOGGER.info(f"Bot: @{me.username}")
+
     import ShizuMusic
     from pytgcalls import PyTgCalls
+
     ShizuMusic.call_py = PyTgCalls(assistant)
     call_py = ShizuMusic.call_py
 
