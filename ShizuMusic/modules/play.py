@@ -214,7 +214,7 @@ async def _process_play(message: Message, query: str, video: bool = False, chat_
             + rich_note(lang["play_assistant_banned_note"]),
         )
         return
-
+        
     if not status:
         await rich_edit(pm, rich_heading(lang["play_assistant_joining_title"], level=3))
         ok = await try_join_assistant(chat_id, pm)
@@ -225,7 +225,7 @@ async def _process_play(message: Message, query: str, video: bool = False, chat_
             rich_heading(lang["play_assistant_joined_title"], level=3)
             + rich_note(lang["generic_processing_note"]),
         )
-
+        await pm.delete()
     # Normalise short YouTube URL
     if "youtu.be" in query:
         m = re.search(r"youtu\.be/([^?&]+)", query)
@@ -273,11 +273,11 @@ async def _process_play(message: Message, query: str, video: bool = False, chat_
         if len(items) > 1:
             rows.append((lang["kv_next"], f"<code>{rich_esc(short(items[1]['title']))}</code>"))
 
-        await rich_send(
+        dm = await rich_send(
             bot, chat_id,
             rich_heading(lang["play_playlist_added_title"], level=3) + rich_kv_table(rows),
         )
-
+        await dm.delete()
         if first_was_empty:
             first_song = peek_current(chat_id)
             if first_song:
@@ -326,7 +326,7 @@ async def _process_play(message: Message, query: str, video: bool = False, chat_
         await play_song(chat_id, pm, song)
     else:
         kb = skip_clear_kb(lang)
-        await rich_send(
+        dm = await rich_send(
             bot, chat_id,
             rich_heading(lang["play_added_queue_title"], level=3)
             + rich_kv_table([
@@ -338,4 +338,4 @@ async def _process_play(message: Message, query: str, video: bool = False, chat_
             + kb,
         )
         await pm.delete()
-
+        await dm.delete()
