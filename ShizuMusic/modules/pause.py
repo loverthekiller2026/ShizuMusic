@@ -1,20 +1,6 @@
-# ═══════════════════════════════════════════════════════════════
-#                     🎵 SHIZUMUSIC
-#
-#                   © 2026 BAD MUNDA
-#
-#                Developed with ❤️ by Bad Munda
-#
-#             Do not remove or alter the original credits.
-#
-#           Copyright © 2026 Bad Munda. All rights reserved.
-#
-#              
-# ═══════════════════════════════════════════════════════════════
 
 from pyrogram import filters
 from pyrogram.types import Message
-
 from ShizuMusic import bot, call_py
 from ShizuMusic.core.channels import target_chat
 from ShizuMusic.modules.block import group_allowed, user_allowed
@@ -52,9 +38,9 @@ async def pause_cmd(_, message: Message) -> None:
             + rich_note(lang["pause_note"]),
         )
     except Exception as e:
-        await rich_send(
+        dm= await rich_send(
             bot, chat_id,
             rich_heading(lang["pause_failed_title"], level=3)
             + rich_note(f"<code>{rich_esc(e)}</code>"),
         )
-
+        await dm.delete()
