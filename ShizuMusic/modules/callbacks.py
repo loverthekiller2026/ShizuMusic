@@ -1,17 +1,3 @@
-# ═══════════════════════════════════════════════════════════════
-#                     🎵 SHIZUMUSIC
-#
-#                   © 2026 BAD MUNDA
-#
-#                Developed with ❤️ by Bad Munda
-#
-#             Do not remove or alter the original credits.
-#
-#           Copyright © 2026 Bad Munda. All rights reserved.
-#
-#              
-# ═══════════════════════════════════════════════════════════════
-
 import asyncio
 import random
 
@@ -155,11 +141,11 @@ async def on_callback(client, cbq: CallbackQuery) -> None:
         try:
             await call_py.pause(chat_id)
             await cbq.answer(lang["cb_paused_toast"])
-            await rich_send(
-                bot, chat_id,
-                rich_heading(lang["pause_title"], level=3)
-                + rich_note(lang["cb_by_footer"].format(user.mention)),
-            )
+            #await rich_send(
+            #    bot, chat_id,
+            #    rich_heading(lang["pause_title"], level=3)
+            #    + rich_note(lang["cb_by_footer"].format(user.mention)),
+            #)
         except Exception:
             await cbq.answer(lang["cb_pause_failed_toast"], show_alert=True)
 
@@ -168,11 +154,11 @@ async def on_callback(client, cbq: CallbackQuery) -> None:
         try:
             await call_py.resume(chat_id)
             await cbq.answer(lang["cb_resumed_toast"])
-            await rich_send(
-                bot, chat_id,
-                rich_heading(lang["resume_title"], level=3)
-                + rich_note(lang["cb_by_footer"].format(user.mention)),
-            )
+       #     await rich_send(
+       #         bot, chat_id,
+       #         rich_heading(lang["resume_title"], level=3)
+       #         + rich_note(lang["cb_by_footer"].format(user.mention)),
+       #     )
         except Exception:
             await cbq.answer(lang["cb_resume_failed_toast"], show_alert=True)
 
@@ -189,14 +175,14 @@ async def on_callback(client, cbq: CallbackQuery) -> None:
         except Exception:
             pass
 
-        await rich_send(
-            bot, chat_id,
-            rich_heading(lang["skip_skipped_title"], level=3)
-            + rich_kv_table([
-                (lang["kv_by"], user.mention),
-                (lang["kv_song"], f"<code>{rich_esc(short(skipped['title']))}</code>"),
-            ]),
-        )
+    #    await rich_send(
+    #        bot, chat_id,
+    #        rich_heading(lang["skip_skipped_title"], level=3)
+    #        + rich_kv_table([
+    #            (lang["kv_by"], user.mention),
+    #            (lang["kv_song"], f"<code>{rich_esc(short(skipped['title']))}</code>"),
+    #        ]),
+    #    )
 
         nxt = peek_current(chat_id)
 
@@ -227,26 +213,26 @@ async def on_callback(client, cbq: CallbackQuery) -> None:
             await play_song(chat_id, dm, nxt)
         else:
             await cbq.answer(lang["cb_queue_empty_toast"], show_alert=True)
-
+            await dm.delete
     # ── STOP ────────────────────────────────────────────────────────────
     elif data == "stop":
         await leave_vc(chat_id)
         await cbq.answer(lang["cb_stopped_toast"])
-        await rich_send(
-            bot, chat_id,
-            rich_heading(lang["stop_stopped_title"], level=3)
-            + rich_note(lang["cb_by_footer"].format(user.mention)),
-        )
+     #   await rich_send(
+     #       bot, chat_id,
+     #       rich_heading(lang["stop_stopped_title"], level=3)
+     #       + rich_note(lang["cb_by_footer"].format(user.mention)),
+     #   )
 
     # ── CLEAR ────────────────────────────────────────────────────────────
     elif data == "clear":
         clear_queue(chat_id)
         await cbq.answer(lang["cb_queue_cleared_toast"])
-        await rich_edit(
-            cbq.message,
-            rich_heading(lang["clear_cleared_title"], level=3)
-            + rich_note(lang["cb_by_footer"].format(user.mention)),
-        )
+    #    await rich_edit(
+    #        cbq.message,
+    #        rich_heading(lang["clear_cleared_title"], level=3)
+    #        + rich_note(lang["cb_by_footer"].format(user.mention)),
+    #    )
 
     # ── THUMBNAIL ON/OFF (button on the player) ───────────────────────────
     elif data == "thumb_toggle":
