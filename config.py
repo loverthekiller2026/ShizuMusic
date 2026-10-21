@@ -16,12 +16,12 @@ MONGO_DB_URL    = os.environ["MONGO_DB_URL"]
 OWNER_ID        = int(os.environ["OWNER_ID"])
 
 # ── Optional ──────────────────────────────────────────────────────────────────
-BOT_NAME         = os.getenv("BOT_NAME", "Shizu Music")
-BOT_LINK         = os.getenv("BOT_LINK", "https://t.me/ShizuMusicBot")
-UPDATES_CHANNEL  = os.getenv("UPDATES_CHANNEL", "https://t.me/PBX_UPDATE")
-SUPPORT_GROUP    = os.getenv("SUPPORT_GROUP", "https://t.me/PBXCHATS")
+BOT_NAME         = os.getenv("BOT_NAME", "『 S E C T O R 0 0 7 』")
+BOT_LINK         = os.getenv("BOT_LINK", "https://t.me/Sector_007bot")
+UPDATES_CHANNEL  = os.getenv("UPDATES_CHANNEL", "https://t.me/sector_updates")
+SUPPORT_GROUP    = os.getenv("SUPPORT_GROUP", "https://t.me/sector_bot_support")
 LOGGER_ID        = int(os.getenv("LOGGER_ID", "0"))
-PING_IMG_URL     = os.getenv("PING_IMG_URL", "https://files.catbox.moe/ddzvc0.jpg",)
+PING_IMG_URL     = os.getenv("PING_IMG_URL", "https://files.catbox.moe/cps3o9.jpg",)
 SESSION_NAME     = os.getenv("SESSION_NAME", "ShizuMusic")
 PORT             = int(os.getenv("PORT", 10000))
 
@@ -48,13 +48,13 @@ START_PHOTOS = [
 ]
 
 # ── Limits ────────────────────────────────────────────────────────────────────
-MAX_DURATION_SECONDS = 1800   # 30 minutes
+MAX_DURATION_SECONDS = 7200   # 30 minutes
 QUEUE_LIMIT          = 20
-COOLDOWN             = 10     # seconds between /play per chat
+COOLDOWN             = 120     # seconds between /play per chat
 
 # ── Playlist limits ───────────────────────────────────────────────────────────
-PLAYLIST_LIMIT       = 10     # playlists per user
-PLAYLIST_SONG_LIMIT  = 50     # songs per playlist
+PLAYLIST_LIMIT       = 50     # playlists per user
+PLAYLIST_SONG_LIMIT  = 100     # songs per playlist
 
 
 #BLOCKED_EXTENSIONS = [
