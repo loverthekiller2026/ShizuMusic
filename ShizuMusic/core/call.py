@@ -34,6 +34,20 @@ async def leave_vc(chat_id: int) -> None:
     Leave voice chat and clean the queue (AutoPlay's ON/OFF setting is kept).
     """
 
+    # Cancel progress updates and remove the active panel before leaving.
+    # This prevents an old player card from continuing to edit after /stop.
+    try:
+        from ShizuMusic.core.player import get_active_panel, mark_panel_closed
+        panel = get_active_panel(chat_id)
+        if panel is not None:
+            mark_panel_closed(chat_id, panel.id)
+            try:
+                await panel.delete()
+            except Exception:
+                pass
+    except Exception as panel_error:
+        LOGGER.debug(f"Player panel cleanup skipped for {chat_id}: {panel_error}")
+
     # Drop pending autoplay suggestions, but keep the ON/OFF setting: once
     # an admin turns AutoPlay on it stays on until they turn it off.
     try:
