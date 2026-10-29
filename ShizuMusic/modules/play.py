@@ -50,6 +50,13 @@ BLOCKED_WORDS = [
 # ── Per-chat state ─────────────────────────────────────────────────────────────
 
 
+async def _delete_command_safely(message: Message) -> None:
+    try:
+        await message.delete()
+    except Exception:
+        pass
+
+
 # ── DB helper ──────────────────────────────────────────────────────────────────
 
 def _db_track(chat_id: int, user_id: int) -> None:
@@ -140,10 +147,8 @@ async def play_handler(_, message: Message) -> None:
     query = (match.group("q") or "").strip()
     cmd   = (match.group("cmd") or "play").strip()
 
-    try:
-        await message.delete()
-    except Exception:
-        pass
+    # Keep command handling responsive while Telegram deletes the request.
+    asyncio.create_task(_delete_command_safely(message))
 
     # Blocked words check
     if any(x in query.lower() for x in BLOCKED_WORDS):
