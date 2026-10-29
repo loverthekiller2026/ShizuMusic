@@ -12,6 +12,7 @@
 #              
 # ═══════════════════════════════════════════════════════════════
 
+import asyncio
 import re
 
 from pyrogram import filters
@@ -40,6 +41,13 @@ from richgram import (
 from ShizuMusic.utils.youtube import search_yt
 
 
+async def _delete_command_safely(message: Message) -> None:
+    try:
+        await message.delete()
+    except Exception:
+        pass
+
+
 @bot.on_message(
     filters.group
     & filters.command(["playforce", "vplayforce", "cplayforce", "cvplayforce"])
@@ -65,10 +73,8 @@ async def playforce_cmd(_, message: Message) -> None:
     parts = (message.text or "").split(None, 1)
     query = parts[1].strip() if len(parts) > 1 else ""
 
-    try:
-        await message.delete()
-    except Exception:
-        pass
+    # Do not wait for Telegram's delete API before processing /playforce.
+    asyncio.create_task(_delete_command_safely(message))
 
     if not query:
         await rich_send(
@@ -156,7 +162,6 @@ async def playforce_cmd(_, message: Message) -> None:
 
     try:
         # Keep synchronous database writes from delaying playback commands.
-        import asyncio
         asyncio.create_task(asyncio.to_thread(add_served_chat, message.chat.id))
         if user:
             asyncio.create_task(asyncio.to_thread(add_served_user, user.id))
