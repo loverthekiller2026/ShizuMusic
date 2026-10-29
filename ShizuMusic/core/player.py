@@ -46,6 +46,7 @@ from ShizuMusic import (
 
 from ShizuMusic.core.queue import (
     remove_from_queue,
+    peek_next,
 )
 
 from ShizuMusic.strings import DEFAULT_LANG, get_string
@@ -434,6 +435,20 @@ async def play_song(
         schedule_prefetch(chat_id, song)
     except Exception:
         pass
+
+    # Warm the next queued track in the background while this song plays.
+    # Atomic temporary downloads in youtube.py ensure a partial file is never
+    # mistaken for a completed cache hit at the song transition.
+    next_song = peek_next(chat_id)
+    if next_song and next_song.get("url"):
+        async def _prefetch_next(url_to_prefetch: str, video_to_prefetch: bool) -> None:
+            try:
+                resolver = resolve_video_stream if video_to_prefetch else resolve_stream
+                await resolver(url_to_prefetch)
+                LOGGER.info("[PREFETCH] Next track ready")
+            except Exception as prefetch_error:
+                LOGGER.warning(f"[PREFETCH] Next track will resolve on demand: {prefetch_error}")
+        asyncio.create_task(_prefetch_next(next_song["url"], bool(next_song.get("video", False))))
 
     # ─────────────────────────────────────────
     # RESET SEEK
