@@ -62,6 +62,9 @@ async def download_song(link: str) -> str:
 
     os.makedirs(DOWNLOAD_DIR, exist_ok=True)
     file_path = os.path.join(DOWNLOAD_DIR, f"{video_id}.mp3")
+    # Download to a unique temporary path so another request never sees a
+    # half-written MP3 as a valid cache hit.
+    temp_path = f"{file_path}.{os.getpid()}.{id(asyncio.current_task())}.part"
 
     # Disk cache
     if os.path.exists(file_path) and os.path.getsize(file_path) > 0:
@@ -92,10 +95,12 @@ async def download_song(link: str) -> str:
                     )
                     return None
 
-                async with aiofiles.open(file_path, "wb") as f:
+                async with aiofiles.open(temp_path, "wb") as f:
                     async for chunk in resp.content.iter_chunked(131072):
                         await f.write(chunk)
 
+        if os.path.exists(temp_path) and os.path.getsize(temp_path) > 0:
+            os.replace(temp_path, file_path)
         if os.path.exists(file_path) and os.path.getsize(file_path) > 0:
             logger.info(
                 f"[shruti] Audio downloaded successfully: "
@@ -107,7 +112,7 @@ async def download_song(link: str) -> str:
 
     except Exception as e:
         logger.error(f"[shruti] download_song error: {e}")
-        _cleanup(file_path)
+        _cleanup(temp_path)
         return None
 
 
@@ -120,6 +125,7 @@ async def download_video(link: str) -> str:
 
     os.makedirs(DOWNLOAD_DIR, exist_ok=True)
     file_path = os.path.join(DOWNLOAD_DIR, f"{video_id}.mp4")
+    temp_path = f"{file_path}.{os.getpid()}.{id(asyncio.current_task())}.part"
 
     if os.path.exists(file_path) and os.path.getsize(file_path) > 0:
         return file_path
@@ -153,10 +159,12 @@ async def download_video(link: str) -> str:
                     )
                     return None
 
-                async with aiofiles.open(file_path, "wb") as f:
+                async with aiofiles.open(temp_path, "wb") as f:
                     async for chunk in resp.content.iter_chunked(131072):
                         await f.write(chunk)
 
+        if os.path.exists(temp_path) and os.path.getsize(temp_path) > 0:
+            os.replace(temp_path, file_path)
         if os.path.exists(file_path) and os.path.getsize(file_path) > 0:
             logger.info(
                 f"[shruti] Video downloaded successfully: "
@@ -169,7 +177,7 @@ async def download_video(link: str) -> str:
 
     except Exception as e:
         logger.error(f"[shruti] download_video error: {e}")
-        _cleanup(file_path)
+        _cleanup(temp_path)
         return None
 
 
