@@ -203,17 +203,13 @@ async def on_callback(client, cbq: CallbackQuery) -> None:
                 pass
 
             await cbq.answer(lang["cb_playing_next_toast"])
-            dm = await rich_send(
-                bot, chat_id,
-                rich_heading(lang["next_track_title"], level=3)
-                + rich_kv_table([
-                    (lang["kv_song"], f"<code>{rich_esc(short(nxt['title']))}</code>"),
-                ]),
-            )
-            await play_song(chat_id, dm, nxt)
+            from ShizuMusic.core.player import get_active_panel
+            panel = get_active_panel(chat_id)
+            if panel is None:
+                panel = cbq.message
+            await play_song(chat_id, panel, nxt)
         else:
             await cbq.answer(lang["cb_queue_empty_toast"], show_alert=True)
-            await dm.delete
     # ── STOP ────────────────────────────────────────────────────────────
     elif data == "stop":
         await leave_vc(chat_id)
