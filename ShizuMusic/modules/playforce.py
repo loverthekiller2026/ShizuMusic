@@ -155,9 +155,12 @@ async def playforce_cmd(_, message: Message) -> None:
     }
 
     try:
-        add_served_chat(message.chat.id)
+        # Keep synchronous database writes from delaying playback commands.
+        import asyncio
+        tasks = [asyncio.to_thread(add_served_chat, message.chat.id)]
         if user:
-            add_served_user(user.id)
+            tasks.append(asyncio.to_thread(add_served_user, user.id))
+        await asyncio.gather(*tasks)
     except Exception:
         pass
 
