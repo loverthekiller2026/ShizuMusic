@@ -47,6 +47,13 @@ from richgram import (
     sanitize_display_name,
 )
 
+async def _delete_command_safely(message: Message) -> None:
+    try:
+        await message.delete()
+    except Exception:
+        pass
+
+
 def _onboarding_body(lang: dict, uid: int, name: str) -> str:
     """Shared by /start (private) and the help panel's 'go back' button."""
     return (
@@ -81,11 +88,8 @@ async def start_handler(_, message: Message) -> None:
     photo     = random.choice(config.START_PHOTOS)
     lang      = chat_strings(chat_id)
 
-    # ── Delete the user's /start command message ──────────────────────────────
-    try:
-        await message.delete()
-    except Exception:
-        pass
+    # Delete in the background so Telegram's delete request cannot delay /start.
+    asyncio.create_task(_delete_command_safely(message))
 
     try:
         # MongoDB helpers are synchronous; do not block Telegram command handling.
@@ -178,11 +182,8 @@ async def help_handler(_, message: Message) -> None:
     name = sanitize_display_name(message.from_user.first_name)
     lang = chat_strings(message.chat.id)
 
-    # ── Delete the user's /help command message ───────────────────────────────
-    try:
-        await message.delete()
-    except Exception:
-        pass
+    # Delete in the background so Telegram's delete request cannot delay /help.
+    asyncio.create_task(_delete_command_safely(message))
 
     kb = help_menu_kb(lang)
 
