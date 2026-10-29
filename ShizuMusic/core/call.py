@@ -34,6 +34,14 @@ async def leave_vc(chat_id: int) -> None:
     Leave voice chat and clean the queue (AutoPlay's ON/OFF setting is kept).
     """
 
+    # Invalidate slow /play or /skip downloads so they cannot restart audio
+    # after /stop has already been requested.
+    try:
+        from ShizuMusic.core.player import invalidate_pending_play
+        invalidate_pending_play(chat_id)
+    except Exception:
+        pass
+
     # Cancel progress updates and remove the active panel before leaving.
     # This prevents an old player card from continuing to edit after /stop.
     try:
