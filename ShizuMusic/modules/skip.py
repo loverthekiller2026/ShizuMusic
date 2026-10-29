@@ -12,6 +12,8 @@
 #              
 # ═══════════════════════════════════════════════════════════════
 
+import asyncio
+
 from pyrogram import filters
 from pyrogram.types import Message
 
@@ -85,16 +87,21 @@ async def skip_cmd(_, message: Message) -> None:
             schedule_prefetch(chat_id, nxt)
         except Exception:
             pass
+        try:
+            from ShizuMusic.utils.youtube import prefetch_track
+            prefetch_track(nxt)
+        except Exception:
+            pass
 
-        # Reuse the existing now-playing panel instead of creating two
-        # transient messages for every skip.
+        # Return immediately; the shared download task lets playback use the
+        # background download instead of starting a second request.
         panel = get_active_panel(chat_id)
         if panel is None:
             panel = await rich_send(
                 bot, chat_id,
                 rich_heading(lang["skip_skipping_title"], level=3),
             )
-        await play_song(chat_id, panel, nxt)
+        asyncio.create_task(play_song(chat_id, panel, nxt))
         return
 
     # No next song: stop the old stream as well as clearing the queue.
