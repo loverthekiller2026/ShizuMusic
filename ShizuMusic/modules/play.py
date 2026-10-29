@@ -297,6 +297,14 @@ async def _process_play(message: Message, query: str, video: bool = False, chat_
 
     pos = add_to_queue(chat_id, song)
 
+    # Start downloading as soon as the track enters the queue. The resolver
+    # shares this in-flight task with play_song, so there is no duplicate fetch.
+    try:
+        from ShizuMusic.utils.youtube import prefetch_track
+        prefetch_track(song)
+    except Exception:
+        pass
+
     if pos == 1:
         await play_song(chat_id, pm, song)
     else:
