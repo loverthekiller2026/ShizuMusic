@@ -141,7 +141,7 @@ async def on_stream_end(_: object, update: StreamEnded) -> None:
     # ── Play next song ───────────────────────────────────────────────────────
     if nxt:
 
-        from ShizuMusic.core.player import play_song
+        from ShizuMusic.core.player import get_active_panel, play_song
 
         # start getting the *next* suggestion ready while this song plays
         try:
@@ -151,11 +151,15 @@ async def on_stream_end(_: object, update: StreamEnded) -> None:
             pass
 
         try:
-            msg = await rich_send(
-                bot, chat_id,
-                rich_heading(lang["next_track_title"], level=3)
-                + rich_kv_table([(lang["kv_title"], f"<code>{rich_esc(nxt['title'])}</code>")]),
-            )
+            # Reuse the existing now-playing panel; only create one if it was
+            # deleted/closed. This prevents a new message for every song.
+            msg = get_active_panel(chat_id)
+            if msg is None:
+                msg = await rich_send(
+                    bot, chat_id,
+                    rich_heading(lang["next_track_title"], level=3)
+                    + rich_kv_table([(lang["kv_title"], f"<code>{rich_esc(nxt['title'])}</code>")]),
+                )
 
             await play_song(chat_id, msg, nxt)
 
