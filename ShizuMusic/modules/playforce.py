@@ -170,4 +170,13 @@ async def playforce_cmd(_, message: Message) -> None:
 
     # Forced song takes slot 0; the old song + rest of the queue stay behind it.
     push_front(chat_id, song)
+    # Warm the previous/current queue item while the forced track plays.
+    try:
+        from ShizuMusic.core.queue import peek_next
+        from ShizuMusic.utils.youtube import prefetch_track
+        queued_next = peek_next(chat_id)
+        if queued_next:
+            prefetch_track(queued_next)
+    except Exception:
+        pass
     await play_song(chat_id, pm, song)
