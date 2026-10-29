@@ -12,9 +12,7 @@
 #              
 # ═══════════════════════════════════════════════════════════════
 
-import asyncio
 import re
-import time
 
 from pyrogram import filters
 from pyrogram.enums import ParseMode
@@ -49,8 +47,6 @@ BLOCKED_WORDS = [
 ]
 
 # ── Per-chat state ─────────────────────────────────────────────────────────────
-_last_cmd: dict[int, float] = {}
-_pending:  dict[int, tuple] = {}
 
 
 # ── DB helper ──────────────────────────────────────────────────────────────────
@@ -62,19 +58,6 @@ def _db_track(chat_id: int, user_id: int) -> None:
             add_served_user(user_id)
     except Exception:
         pass
-
-
-# ── Cooldown handler ───────────────────────────────────────────────────────────
-
-async def _run_pending(chat_id: int, delay: int) -> None:
-    await asyncio.sleep(delay)
-    if chat_id in _pending:
-        msg, reply = _pending.pop(chat_id)
-        try:
-            await reply.delete()
-        except Exception:
-            pass
-        await play_handler(bot, msg)
 
 
 # ── /play & /vplay command ─────────────────────────────────────────────────────
@@ -163,22 +146,6 @@ async def play_handler(_, message: Message) -> None:
     if any(x in query.lower() for x in BLOCKED_WORDS):
         await rich_send(bot, chat_id, rich_heading(lang["play_blocked_title"], level=3))
         return
-
-    # Cooldown check
-    now = time.time()
-    if chat_id in _last_cmd and (now - _last_cmd[chat_id]) < config.COOLDOWN:
-        rem = int(config.COOLDOWN - (now - _last_cmd[chat_id]))
-        if chat_id not in _pending:
-            rep = await rich_send(
-                bot, chat_id,
-                rich_heading(lang["play_cooldown_title"], level=3)
-                + rich_kv_table([(lang["kv_processing_in"], f"<code>{rem}s</code>")]),
-            )
-            _pending[chat_id] = (message, rep)
-            asyncio.create_task(_run_pending(chat_id, rem))
-        return
-
-    _last_cmd[chat_id] = now
 
     if not query:
         await rich_send(
