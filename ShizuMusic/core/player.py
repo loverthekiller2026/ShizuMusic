@@ -107,6 +107,13 @@ def _now_playing_kb(elapsed: float, total: float, chat_id=None, lang=None) -> st
 
 
 _panel_content: dict = {}
+_active_panels: dict[int, Message] = {}
+_progress_tasks: dict[int, asyncio.Task] = {}
+
+
+def get_active_panel(chat_id: int):
+    """Return the one reusable player message for this playback chat."""
+    return _active_panels.get(int(chat_id))
 
 
 def get_panel_content(chat_id: int, message_id: int):
@@ -124,6 +131,12 @@ _closed_panels: set = set()
 def mark_panel_closed(chat_id: int, message_id: int) -> None:
     _closed_panels.add((chat_id, message_id))
     _panel_content.pop((chat_id, message_id), None)
+    current = _active_panels.get(int(chat_id))
+    if current and current.id == message_id:
+        _active_panels.pop(int(chat_id), None)
+    task = _progress_tasks.pop(int(chat_id), None)
+    if task and not task.done():
+        task.cancel()
 
 
 async def _update_progress(
@@ -227,6 +240,17 @@ async def play_song(
 
     chat_id = int(chat_id)
     lang = chat_strings(chat_id)
+
+    # Reuse the current player panel for every subsequent track in this chat.
+    active_panel = get_active_panel(chat_id)
+    if active_panel is not None:
+        message = active_panel
+
+    # Stop the previous track's progress updater before changing panel content.
+    old_progress = _progress_tasks.pop(chat_id, None)
+    if old_progress and not old_progress.done():
+        old_progress.cancel()
+
     url = song.get("url")
 
     if not url:
@@ -457,10 +481,11 @@ async def play_song(
         pmsg = await rich_send(bot, chat_id, content + kb)
 
     _panel_content[(chat_id, pmsg.id)] = content
+    _active_panels[chat_id] = pmsg
     # channel play: the panel lives in the group but its buttons drive the channel VC
     register_panel(pmsg.chat.id, pmsg.id, chat_id)
 
-    asyncio.create_task(
+    _progress_tasks[chat_id] = asyncio.create_task(
         _update_progress(
             chat_id,
             pmsg,
