@@ -50,7 +50,6 @@ START_PHOTOS = [
 # ── Limits ────────────────────────────────────────────────────────────────────
 MAX_DURATION_SECONDS = 7200   # 30 minutes
 QUEUE_LIMIT          = 20
-COOLDOWN             = 120     # seconds between /play per chat
 
 # ── Playlist limits ───────────────────────────────────────────────────────────
 PLAYLIST_LIMIT       = 50     # playlists per user
