@@ -23,7 +23,7 @@ import config
 from ShizuMusic import bot
 from ShizuMusic.core.channels import target_chat
 from ShizuMusic.core.player import play_song
-from ShizuMusic.core.queue import add_to_queue, peek_current, queue_size
+from ShizuMusic.core.queue import add_to_queue, get_queue, peek_current, queue_size
 from ShizuMusic.modules.block import group_allowed, user_allowed
 from ShizuMusic.utils.buttons import skip_clear_kb
 from ShizuMusic.utils.assistant import is_assistant_in, try_join_assistant
@@ -246,8 +246,7 @@ async def _process_play(message: Message, query: str, video: bool = False, chat_
         if not first_was_empty:
             try:
                 from ShizuMusic.utils.youtube import prefetch_track
-                next_song = peek_current(chat_id)
-                queue_items = __import__("ShizuMusic.core.queue", fromlist=["get_queue"]).get_queue(chat_id)
+                queue_items = get_queue(chat_id)
                 next_song = queue_items[1] if len(queue_items) > 1 else None
                 if next_song:
                     prefetch_track(next_song)
