@@ -84,6 +84,22 @@ from ShizuMusic.utils.youtube import (
 # ─────────────────────────────────────────────
 
 
+def _track_playback_db(chat_id: int, requester_id: int | None) -> None:
+    """Do synchronous database bookkeeping outside the asyncio event loop."""
+    try:
+        from ShizuMusic.database import (
+            add_served_chat,
+            add_served_user,
+            increment_play_count,
+        )
+        add_served_chat(notify_chat(chat_id))
+        if requester_id:
+            add_served_user(requester_id)
+        increment_play_count(chat_id)
+    except Exception as db_err:
+        LOGGER.warning(f"[DB ERROR] {db_err}")
+
+
 def _now_playing_content(song: dict, lang: dict, show_thumb: bool = True) -> str:
     """Now-playing rich message content (thumbnail only if the chat has it ON)."""
 
@@ -457,6 +473,15 @@ async def play_song(
     if not played:
         return
 
+    # Start warming the next track immediately after the stream is accepted.
+    next_song = peek_next(chat_id)
+    if next_song:
+        try:
+            from ShizuMusic.utils.youtube import prefetch_track
+            prefetch_track(next_song)
+        except Exception as prefetch_error:
+            LOGGER.warning(f"[PREFETCH] Could not schedule next track: {prefetch_error}")
+
     try:
         from ShizuMusic.core.autoplay import schedule_prefetch
         schedule_prefetch(chat_id, song)
@@ -486,23 +511,9 @@ async def play_song(
     # DATABASE TRACKING
     # ─────────────────────────────────────────
 
-    try:
-        from ShizuMusic.database import (
-            add_served_chat,
-            add_served_user,
-            increment_play_count,
-        )
-
-        add_served_chat(notify_chat(chat_id))      # never put a channel in the broadcast list
-        requester_id = song.get("requester_id")
-
-        if requester_id:
-            add_served_user(requester_id)
-
-        increment_play_count(chat_id)
-
-    except Exception as db_err:
-        LOGGER.warning(f"[DB ERROR] {db_err}")
+    asyncio.create_task(
+        asyncio.to_thread(_track_playback_db, chat_id, song.get("requester_id"))
+    )
 
 
 
