@@ -118,6 +118,12 @@ def get_active_panel(chat_id: int):
     return _active_panels.get(int(chat_id))
 
 
+def invalidate_pending_play(chat_id: int) -> None:
+    """Prevent any slow download task from restarting playback after /stop."""
+    chat_id = int(chat_id)
+    _play_generation[chat_id] = _play_generation.get(chat_id, 0) + 1
+
+
 def get_panel_content(chat_id: int, message_id: int):
     return _panel_content.get((chat_id, message_id))
 
