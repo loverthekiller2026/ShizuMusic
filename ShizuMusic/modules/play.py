@@ -241,6 +241,19 @@ async def _process_play(message: Message, query: str, video: bool = False, chat_
                 "thumbnail":        item["thumbnail"],
             })
 
+        # If playback was already active, predownload the immediate next item
+        # from this playlist instead of waiting until the current track ends.
+        if not first_was_empty:
+            try:
+                from ShizuMusic.utils.youtube import prefetch_track
+                next_song = peek_current(chat_id)
+                queue_items = __import__("ShizuMusic.core.queue", fromlist=["get_queue"]).get_queue(chat_id)
+                next_song = queue_items[1] if len(queue_items) > 1 else None
+                if next_song:
+                    prefetch_track(next_song)
+            except Exception:
+                pass
+
         rows = [
             (lang["kv_songs"], f"<code>{len(items)}</code>"),
             (lang["kv_first"], f"<code>{rich_esc(short(items[0]['title']))}</code>"),
