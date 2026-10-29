@@ -201,13 +201,17 @@ async def on_callback(client, cbq: CallbackQuery) -> None:
                 schedule_prefetch(chat_id, nxt)
             except Exception:
                 pass
+            try:
+                from ShizuMusic.utils.youtube import prefetch_track
+                prefetch_track(nxt)
+            except Exception:
+                pass
 
+            # Acknowledge the button immediately; playback switches in background.
             await cbq.answer(lang["cb_playing_next_toast"])
             from ShizuMusic.core.player import get_active_panel
-            panel = get_active_panel(chat_id)
-            if panel is None:
-                panel = cbq.message
-            await play_song(chat_id, panel, nxt)
+            panel = get_active_panel(chat_id) or cbq.message
+            asyncio.create_task(play_song(chat_id, panel, nxt))
         else:
             # The last track was removed; stop its stream instead of leaving
             # audio running with an empty queue.
