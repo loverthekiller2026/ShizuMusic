@@ -209,6 +209,9 @@ async def on_callback(client, cbq: CallbackQuery) -> None:
                 panel = cbq.message
             await play_song(chat_id, panel, nxt)
         else:
+            # The last track was removed; stop its stream instead of leaving
+            # audio running with an empty queue.
+            await leave_vc(chat_id)
             await cbq.answer(lang["cb_queue_empty_toast"], show_alert=True)
     # ── STOP ────────────────────────────────────────────────────────────
     elif data == "stop":
