@@ -17,6 +17,8 @@ from ShizuMusic.utils.formatters import sec_to_iso
 logger = logging.getLogger(__name__)
 
 _file_cache: dict[str, str] = {}
+_download_tasks: dict[str, asyncio.Task] = {}
+_prefetch_tasks: dict[str, asyncio.Task] = {}
 
 
 # ═════════════════════════════════════════════════════════════════════════════
@@ -204,17 +206,54 @@ async def resolve_stream(url: str) -> str:
         _file_cache[url] = file_path
         return file_path
 
-    logger.info(f"[shruti] Downloading: {video_id}")
-    downloaded = await download_song(url)
+    # Share one in-flight download between background prefetch and playback.
+    task = _download_tasks.get(file_path)
+    if task is None or task.done():
+        task = asyncio.create_task(download_song(url))
+        _download_tasks[file_path] = task
+
+    try:
+        downloaded = await task
+    finally:
+        if _download_tasks.get(file_path) is task:
+            _download_tasks.pop(file_path, None)
 
     if downloaded:
         _file_cache[url] = downloaded
-        logger.info(
-            f"[shruti] Done — {os.path.getsize(downloaded) // 1024} KB"
-        )
+        logger.info(f"[shruti] Ready — {os.path.getsize(downloaded) // 1024} KB")
         return downloaded
 
     raise Exception("Shruti API download failed. Please try again.")
+
+
+def prefetch_track(song: dict) -> None:
+    """Warm a queued track in the background; safe to call repeatedly."""
+    try:
+        if not song or not song.get("url"):
+            return
+        url = song["url"]
+        if os.path.isfile(url):
+            return
+        video = bool(song.get("video", False))
+        key = f"{'video' if video else 'audio'}:{_extract_video_id(url)}"
+        existing = _prefetch_tasks.get(key)
+        if existing and not existing.done():
+            return
+
+        async def _run() -> None:
+            try:
+                resolver = resolve_video_stream if video else resolve_stream
+                await resolver(url)
+                logger.info(f"[PREFETCH] Ready: {song.get('title', key)}")
+            except Exception as exc:
+                logger.warning(f"[PREFETCH] Failed; playback will retry: {exc}")
+            finally:
+                if _prefetch_tasks.get(key) is asyncio.current_task():
+                    _prefetch_tasks.pop(key, None)
+
+        _prefetch_tasks[key] = asyncio.create_task(_run())
+    except Exception as exc:
+        logger.warning(f"[PREFETCH] Could not schedule track: {exc}")
 
 
 # ═════════════════════════════════════════════════════════════════════════════
