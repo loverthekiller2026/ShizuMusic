@@ -488,14 +488,6 @@ async def play_song(
     except Exception:
         pass
 
-    # Ensure the next queued item is warmed, even if it was added earlier.
-    next_song = peek_next(chat_id)
-    if next_song:
-        try:
-            from ShizuMusic.utils.youtube import prefetch_track
-            prefetch_track(next_song)
-        except Exception as prefetch_error:
-            LOGGER.warning(f"[PREFETCH] Could not schedule next track: {prefetch_error}")
 
     # ─────────────────────────────────────────
     # RESET SEEK
