@@ -110,6 +110,7 @@ def _now_playing_kb(elapsed: float, total: float, chat_id=None, lang=None) -> st
 _panel_content: dict = {}
 _active_panels: dict[int, Message] = {}
 _progress_tasks: dict[int, asyncio.Task] = {}
+_play_generation: dict[int, int] = {}
 
 
 def get_active_panel(chat_id: int):
@@ -241,6 +242,9 @@ async def play_song(
 
     chat_id = int(chat_id)
     lang = chat_strings(chat_id)
+    # A newer Skip/Play request invalidates older unresolved transitions.
+    generation = _play_generation.get(chat_id, 0) + 1
+    _play_generation[chat_id] = generation
 
     # Reuse the current player panel for every subsequent track in this chat.
     active_panel = get_active_panel(chat_id)
@@ -281,6 +285,8 @@ async def play_song(
             media_path = await resolve_stream(url)
 
     except Exception as e:
+        if _play_generation.get(chat_id) != generation:
+            return
         try:
             remove_from_queue(chat_id, 0)
         except Exception:
@@ -291,6 +297,10 @@ async def play_song(
             rich_heading(lang["download_failed_title"], level=3)
             + rich_note(f"<code>{rich_esc(e)}</code>"),
         )
+        return
+
+    # If another command superseded this slow download, never start the stale track.
+    if _play_generation.get(chat_id) != generation:
         return
 
     # ─────────────────────────────────────────
@@ -304,6 +314,9 @@ async def play_song(
 
         except Exception as fx_err:
             LOGGER.warning(f"[Effects] Skipped: {fx_err}")
+
+    if _play_generation.get(chat_id) != generation:
+        return
 
     # ─────────────────────────────────────────
     # PLAY STREAM
