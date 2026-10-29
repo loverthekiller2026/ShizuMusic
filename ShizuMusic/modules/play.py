@@ -81,7 +81,7 @@ async def play_handler(_, message: Message) -> None:
 
     # Database writes use synchronous Mongo calls; keep them off the bot's
     # event loop so /skip, /stop, /help and callbacks remain responsive.
-    await asyncio.to_thread(_db_track, message.chat.id, user_id)
+    asyncio.create_task(asyncio.to_thread(_db_track, message.chat.id, user_id))
 
     # ── Replied audio / video ──────────────────────────────────────────────────
     if message.reply_to_message and (
