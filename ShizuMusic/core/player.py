@@ -353,11 +353,15 @@ async def play_song(
                     ),
                 )
 
+            if _play_generation.get(chat_id) != generation:
+                return
             played = True
             break
 
         except NoActiveGroupCall:
 
+            if _play_generation.get(chat_id) != generation:
+                return
             if attempt == 0:
                 LOGGER.info(f"[VC] NoActiveGroupCall — Creating VC in {chat_id}")
                 ok = await _ensure_vc(chat_id)
@@ -373,6 +377,8 @@ async def play_song(
                 return
 
         except TelegramServerError as e:
+            if _play_generation.get(chat_id) != generation:
+                return
             LOGGER.error(f"[PLAY] TelegramServerError: {e}")
 
             try:
@@ -389,6 +395,8 @@ async def play_song(
 
         except Exception as e:
 
+            if _play_generation.get(chat_id) != generation:
+                return
             err = str(e).lower()
 
             vc_missing = any(
