@@ -12,6 +12,7 @@
 #              
 # ═══════════════════════════════════════════════════════════════
 
+import asyncio
 import re
 
 from pyrogram import filters
@@ -78,7 +79,9 @@ async def play_handler(_, message: Message) -> None:
     user_id = message.from_user.id if message.from_user else 0
     lang = chat_strings(chat_id)
 
-    _db_track(message.chat.id, user_id)
+    # Database writes use synchronous Mongo calls; keep them off the bot's
+    # event loop so /skip, /stop, /help and callbacks remain responsive.
+    await asyncio.to_thread(_db_track, message.chat.id, user_id)
 
     # ── Replied audio / video ──────────────────────────────────────────────────
     if message.reply_to_message and (
