@@ -89,10 +89,8 @@ async def start_handler(_, message: Message) -> None:
 
     try:
         # MongoDB helpers are synchronous; do not block Telegram command handling.
-        await asyncio.gather(
-            asyncio.to_thread(add_served_user, uid),
-            asyncio.to_thread(add_served_chat, chat_id),
-        )
+        asyncio.create_task(asyncio.to_thread(add_served_user, uid))
+        asyncio.create_task(asyncio.to_thread(add_served_chat, chat_id))
     except Exception:
         pass
 
@@ -109,7 +107,7 @@ async def start_handler(_, message: Message) -> None:
             sent = await rich_send(bot, chat_id, caption + kb)
 
         try:
-            await asyncio.to_thread(add_broadcast_chat, chat_id, "private")
+            asyncio.create_task(asyncio.to_thread(add_broadcast_chat, chat_id, "private"))
         except Exception:
             pass
 
@@ -166,7 +164,7 @@ async def start_handler(_, message: Message) -> None:
             pass
 
         try:
-            await asyncio.to_thread(add_broadcast_chat, chat_id, "group")
+            asyncio.create_task(asyncio.to_thread(add_broadcast_chat, chat_id, "group"))
         except Exception:
             pass
 
